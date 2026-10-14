@@ -331,7 +331,7 @@ a= 3 b= 8 op=001 -> result=11011 (27)
 ALU: PASO - 2058 casos
 ```
 
-![Simulación de la ALU](sim/tb_alu.png)
+![Simulación de la ALU](lab03/sim/tb_alu.png)
 
 > _[Captura de GTKWave: `a`, `b`, `op` y `result`, primeros 100 ns]_
 
@@ -348,7 +348,7 @@ Reset verificado
 REG_BANK: PASO
 ```
 
-![Simulación del banco de registros](sim/tb_reg_bank.png)
+![Simulación del banco de registros](lab03/sim/tb_reg_bank.png)
 
 > _[Captura de GTKWave: `clk`, `we`, `waddr`, `wdata`, `ra`, `rb`, `da`, `db`]_
 
@@ -366,7 +366,7 @@ OK idx=0: (R0, R1)  LEDs=0011
 COMB_SELECTOR: PASO
 ```
 
-![Simulación del selector](sim/tb_comb_selector.png)
+![Simulación del selector](lab03/sim/tb_comb_selector.png)
 
 > _[Captura de GTKWave: `next`, `idx`, `aa`, `ab`, `active`]_
 
@@ -386,7 +386,7 @@ COMB_SELECTOR: PASO
 
 `DISPLAY: PASO`. `0x40` es el segmento central (signo `-`), `0x00` es un dígito apagado y los demás son los patrones de 0 a 9.
 
-![Trama del TM1637](sim/tb_display_tm1637.png)
+![Trama del TM1637](lab03/sim/tb_display_tm1637.png)
 
 > _[Captura de GTKWave con zoom en una trama: `tm_clk`, `tm_dio`, `state`, `cur_byte`]_
 
@@ -411,11 +411,11 @@ COMB_SELECTOR: PASO
 
 Todas las pulsaciones del testbench incluyen 3 rebotes al presionar y 3 al soltar, más cortos que `DEBOUNCE_CYCLES`. Que el registro de escritura y el índice de pares avancen exactamente un paso por pulsación confirma que el antirrebote funciona.
 
-![Simulación del sistema completo](sim/tb_top_general.png)
+![Simulación del sistema completo](lab03/sim/tb_top_general.png)
 
 > _[Captura de GTKWave, vista general: `btn0`–`btn3`, `sw`, `dut.u_comb.comb_idx`, `led`, `dut.u_exec.result_lat`, `dut.u_exec.op_lat`]_
 
-![Conservación del resultado](sim/tb_top_conservacion.png)
+![Conservación del resultado](lab03/sim/tb_top_conservacion.png)
 
 > _[Captura de GTKWave con zoom en T6: `btn1`, `btn2`, `btn3`, `sw`, `dut.data_a`, `dut.data_b`, `dut.alu_result`, `dut.u_exec.result_lat`]_
 
