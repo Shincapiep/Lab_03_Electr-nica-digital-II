@@ -89,26 +89,13 @@ Indica el registro seleccionado para escritura:
 
 ### 2.5 Display TM1637
 
-El resultado retenido en la unidad de ejecución (`result_lat` y `op_lat`) se envía al display externo TM1637 mediante un módulo driver dedicado que emula el protocolo serie de 2 hilos mediante una FSM.
+El driver adapta la representación en los 4 dígitos físicos del display según el tipo de operación:
 
-#### Conexión Física (Puerto Pmod JE)
-| Señal TM1637 | Pin FPGA (Zybo Z7) | Función |
-| :--- | :--- | :--- |
-| **tm_clk** | V12 (JE[0]) | Reloj de comunicación serie (10 kHz) |
-| **tm_dio** | W16 (JE[1]) | Línea bidireccional de datos (con Pull-up interno) |
-| **VCC** | 3.3V (JE[5]) | Alimentación |
-| **GND** | GND (JE[4]) | Tierra |
-
-#### Estrategia Híbrida de Visualización
-El driver adapta la representación en los 4 dígitos físicos del display según el tipo de operación (`op_code`):
-
-1. **Modo Decimal con Signo (`ADD`, `SUB`, `AND`, `OR`, `XOR`):**
+**Modo Decimal con Signo (`ADD`, `SUB`, `AND`, `OR`, `XOR`):**
    - **Formato:** `[DIG3: Signo] [DIG2: Decenas] [DIG1: Unidades] [DIG0: Código OP]`
    - **Sustracción (`SUB`):** Si el resultado de 5 bits indica valor negativo (bit 4 en `1`), el dígito izquierdo (`DIG3`) enciende el segmento de signo negativo (`-`) y la magnitud en complemento a 2 se convierte a decimal.
-   - **Identificador de Operación:** El dígito menos significativo (`DIG0`) muestra el código numérico de la operación ejecutada (`0` a `4`).
-   - **Optimización de síntesis:** La conversión a BCD (decenas y unidades) se realiza mediante una tabla de búsqueda combinacional (`bcd_lookup`), evitando operadores de división (`/`) y módulo (`%`) en el hardware.
-
-2. **Modo Binario Directo (`NOT`, `ROL`, `ROR`):**
+   
+**Modo Binario Directo (`NOT`, `ROL`, `ROR`):**
    - **Formato:** `[DIG3: Bit 3] [DIG2: Bit 2] [DIG1: Bit 1] [DIG0: Bit 0]`
    - Los 4 dígitos muestran de forma directa la palabra binaria resultante de 4 bits.
 ---
