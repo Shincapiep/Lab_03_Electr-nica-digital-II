@@ -335,27 +335,29 @@ El módulo TM1637 se alimenta desde el mismo Pmod JE: VCC en el pin 6 (3.3 V) y 
 
 ## 7. Simulación
 
-Cada módulo se probó por separado y luego se probó el sistema completo con el `top.v` real: comparan cada resultado con el valor esperado e imprimen `PASO` o `FALLO`.
+Cada módulo del sistema se probó de manera independiente mediante un *testbench* dedicado antes de realizar la simulación integrada con el archivo superior `top.v`. Los testbenches evalúan automáticamente las salidas contra modelos de referencia e imprimen en consola el resultado `PASO` o `FALLO`.
 
-| Testbench | Módulo bajo prueba | Qué verifica |
-|---|---|---|
-| `tb_alu.v` | `alu` | Las 8 operaciones con las 256 combinaciones de A y B (2058 casos) contra un modelo de referencia |
-| `tb_reg_bank.v` | `reg_bank` | Escritura en los 4 registros, lectura por ambos puertos, `write_enable = 0`, sobrescritura y reset |
-| `tb_comb_selector.v` | `comb_selector` | Los 6 pares, la vuelta a (R0, R1), los LEDs, que no avance sin pulso y el reset |
-| `tb_display_tm1637.v` | `display_tm1637` | Decodifica las tramas del bus TM1637 y compara los 4 dígitos en 9 casos |
-| `tb_top.v` | `top` (sistema completo) | Todo el flujo con pulsaciones con rebote: escritura, pares, operaciones, resultado guardado, conservación, LEDs, RGB y dígitos del display |
+| Testbench | Módulo Bajo Prueba | Verificación Realizada |
+| :--- | :--- | :--- |
+| `tb_alu.v` | `alu.v` | Evalúa las 8 operaciones con las 256 combinaciones de A y B (2058 casos de prueba total). |
+| `tb_reg_bank.v` | `reg_bank.v` | Escritura en los 4 registros, lectura simultánea por ambos puertos, verificación de `write_enable = 0`, sobrescritura y `reset`. |
+| `tb_comb_selector.v` | `comb_selector.v` | Recorrido de los 6 pares de operandos, retorno circular a (R0, R1), máscara de LEDs `active`, retención sin pulso y `reset`. |
+| `tb_display_tm1637.v` | `display_tm1637.v` | Decodificación del protocolo serie del bus TM1637 y validación de dígitos en 9 escenarios de prueba. |
+| `tb_top.v` | `top.v` (Sistema completo) | Flujo completo con pulsaciones reales con rebote: carga de registros, combinaciones, operaciones ALU, retención del resultado, LEDs, RGB y display. |
 
-Para verificar el display sin hardware se escribió `tm1637_monitor.v`, un modelo que observa CLK y DIO, detecta START y STOP, arma los bytes LSB primero y guarda los 4 dígitos de cada trama. Así la simulación comprueba **lo que realmente viaja por el bus**, no solo las señales internas del driver.
+### Modelo de Verificación del Bus: `tm1637_monitor.v`
+Para validar la comunicación serie sin requerir el hardware físico, se desarrolló el módulo de verificación `tm1637_monitor.v`. Este bloque observa las líneas físicas `tm_clk` y `tm_dio`, detecta las condiciones de `START` y `STOP`, ensambla los bytes recibidos (orden LSB primero) y extrae los patrones transmitidos a los 4 dígitos. De esta forma, la simulación valida lo que realmente viaja por el bus físico.
 
-En simulación se usan valores reducidos de los parámetros:
+### Escalado de Parámetros para Simulación
+Para evitar tiempos excesivos de simulación y facilitar la inspección visual en GTKWave, se redujeron los parámetros temporales en el entorno de pruebas:
 
-| Parámetro | Síntesis | Simulación |
+| Parámetro | Valor en Síntesis (FPGA) | Valor en Simulación (Testbench) |
 |---|---|---|
 | `DEBOUNCE_CYCLES` | 250 000 (2 ms) | 8 |
 | `TM_BIT_HZ` | 10 kHz | 6.25 MHz |
 | `TM_REFRESH_TICKS` | 2000 | 50 |
 
-Ejecución 
+### Comandos de Compilación y Ejecución (Icarus Verilog + GTKWave)
 ```bash
 iverilog -g2005 -o s_alu  tb_alu.v ../src/alu.v
 iverilog -g2005 -o s_rb   tb_reg_bank.v ../src/reg_bank.v
@@ -404,6 +406,8 @@ REG_BANK: PASO
 
 > _[Captura de GTKWave: `clk`, `we`, `waddr`, `wdata`, `ra`, `rb`, `da`, `db`]_
 
+Se valida la escritura síncrona en los registros en el flanco de subida de clk únicamente cuando `write_enable = 1`. La lectura por los dos puertos independientes (`read_data_a` y `read_data_b`) es inmediata y asíncrona.
+
 ### 7.3 Selector de combinaciones
 
 ```
@@ -422,6 +426,8 @@ COMB_SELECTOR: PASO
 
 > _[Captura de GTKWave: `next`, `idx`, `aa`, `ab`, `active`]_
 
+Cada pulso de `next_comb` incrementa `comb_idx` en 1 y actualiza las direcciones de lectura `addr_a` y `addr_b`. Al llegar a la combinación 5 (R2, R3), el siguiente pulso reinicia el contador a 0 (R0, R1). La señal `active` enciende exactamente los 2 LEDs correspondientes.
+
 ### 7.4 Display
 
 | Entrada | Bytes recibidos (d3 d2 d1 d0) | Display |
@@ -436,9 +442,9 @@ COMB_SELECTOR: PASO
 | NOT, 0101 | `3F 06 3F 06` | `0101` |
 | ROL, 1010 | `06 3F 06 3F` | `1010` |
 
-`DISPLAY: PASO`. `0x40` es el segmento central (signo `-`), `0x00` es un dígito apagado y los demás son los patrones de 0 a 9.
+**NOTA:** `0x40` representa el segmento de signo negativo (-), `0x00` indica dígito apagado, y los demás valores mapean la codificación de 7 segmentos de los dígitos 0 a 9.
 
-![Trama del TM1637](lab03/sim/tb_display_tm1637.png)
+<img width="955" height="76" alt="image" src="https://github.com/user-attachments/assets/ce216b56-d65b-4611-a77b-f5dced3a2ce9" />
 
 > _[Captura de GTKWave con zoom en una trama: `tm_clk`, `tm_dio`, `state`, `cur_byte`]_
 
