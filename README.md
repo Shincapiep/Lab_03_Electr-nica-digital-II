@@ -140,17 +140,6 @@ El procesamiento de información sigue la siguiente secuencia:
 
 Recibe dos operandos de 4 bits (`a` y `b`) y entrega un resultado de 5 bits (`result`). El bit adicional (`result[4]`) conserva el acarreo de la suma y la extensión de signo de la resta, los cuales se perderían con una salida de 4 bits.
 
-| op | Operación | Resultado en Verilog | Rango | Ejemplo ($A = 10$, $B = 5$) |
-| :-: | :--- | :--- | :-: | :-: |
-| **000** | **ADD** | `{1'b0, a} + {1'b0, b}` | 0 a 30 | 15 (`01111`) |
-| **001** | **SUB** | `{1'b0, a} - {1'b0, b}` | -15 a 15 | 5 (`00101`) |
-| **010** | **AND** | `{1'b0, a & b}` | 0 a 15 | 0 (`00000`) |
-| **011** | **OR** | `{1'b0, a \| b}` | 0 a 15 | 15 (`01111`) |
-| **100** | **XOR** | `{1'b0, a ^ b}` | 0 a 15 | 15 (`01111`) |
-| **101** | **NOT** | `{1'b0, ~a}` | 0 a 15 | 5 (`00101`) |
-| **110** | **ROL** | `{1'b0, a[2:0], a[3]}` (Rotación izq.) | 0 a 15 | 5 (`00101`) |
-| **111** | **ROR** | `{1'b0, a[0], a[3:1]}` (Rotación der.) | 0 a 15 | 5 (`00101`) |
-
 | `op` | Operación | Resultado | Rango | Ejemplo (A = 10, B = 5) |
 |---|---|---|---|---|
 | `000` | ADD | $A + B$ | 0 a 30 | 15 |
@@ -162,17 +151,20 @@ Recibe dos operandos de 4 bits (`a` y `b`) y entrega un resultado de 5 bits (`re
 | `110` | ROL | Rotación de A a la izquierda (el bit 3 pasa al bit 0) | 0 a 15 | 5 |
 | `111` | ROR | Rotación de A a la derecha (el bit 0 pasa al bit 3) | 0 a 15 | 5 |
 
-NOT, ROL y ROR solo usan el operando A.
+NOT, ROL y ROR operan exclusivamente sobre el operando A.
 
-La resta se calcula extendiendo los operandos a 5 bits, por lo que el bit 4 queda como bit de signo. Por ejemplo, $3 - 8 = -5$, que en complemento a 2 de 5 bits es $11011_2 = 27$; el display interpreta ese valor como −5 (sección 5).
+En todas las operaciones lógicas y de desplazamiento, el bit más significativo `result[4]` se rellenante explícitamente con `1'b0`.
+
+La resta se calcula extendiendo los operandos a 5 bits, por lo que el bit 4 queda como bit de signo en complemento a 2. Por ejemplo, $3 - 8 = -5$, que en complemento a 2 de 5 bits es $11011_2 = 27$; el display interpreta ese valor como −5 (sección 5).
 
 El módulo usa `always @(*)`, no tiene reloj ni registros, y todas las ramas del `case` asignan `result`, por lo que no se infieren latches.
 
 ### 4.2 `reg_bank.v`: banco de registros
 
-- 4 registros de 4 bits, inicializados en 0.
-- Escritura síncrona: en el flanco de subida del reloj, si `write_enable = 1`, se guarda `write_data` en `regs[write_addr]`.
-- Dos puertos de lectura combinacionales: `read_data_a = regs[read_addr_a]` y `read_data_b = regs[read_addr_b]`, que entregan los operandos A y B al mismo tiempo.
+Almacena los datos temporales del sistema mediante las siguientes especificaciones:
+- Contiene 4 registros de 4 bits ($R_0, R_1, R_2, R_3$), inicializados en cero (`4'h0`).
+- **Escritura síncrona:** En el flanco de subida del reloj, si `write_enable = 1`, se guarda `write_data` en `regs[write_addr]`.
+- **Dos puertos de lectura combinacionales:** Entregan de forma asíncrona e inmediata los datos `read_data_a = regs[read_addr_a]` y `read_data_b = regs[read_addr_b]` a las entradas de la ALU.
 
 ### 4.3 `comb_selector.v`: selector de operandos
 
@@ -190,21 +182,32 @@ En cada par, A siempre es el registro de menor índice. Por eso la resta se calc
 
 ### 4.4 `debounce.v`: acondicionamiento de botones
 
-Cada botón pasa por tres etapas:
+Cada botón físico pasa por tres etapas de procesamiento:
 
-1. Sincronizador de 2 flip-flops, porque los botones son asíncronos respecto al reloj y pueden causar metaestabilidad.
-2. Filtro de rebote: un cambio de nivel solo se acepta si se mantiene durante `N_CYCLES` ciclos seguidos; si el botón rebota, el contador se reinicia.
-3. Detector de flanco: cuando se confirma la transición de 0 a 1, `btn_pulse` vale 1 durante **un solo ciclo**.
+1. **Sincronizador de 2 Flip-Flops:** Aísla la entrada asíncrona del botón respecto al reloj principal de la FPGA para evitar estados de metaestabilidad.
+2. **Filtro de rebote:** Un cambio de nivel en la señal solo se valida si se mantiene estable durante `N_CYCLES` ciclos de reloj consecutivos. Si la señal rebota, el contador interno se reinicia.
+3. **Detector de flanco ascendente:** Una vez confirmada la transición de `0` a `1`, la salida `btn_pulse` se activa durante **un solo ciclo de reloj**.
 
-Con el valor por defecto, el tiempo de filtrado es:
+Con el valor por defecto configurado para la frecuencia de la Zybo Z7 (125 MHz), el tiempo de filtrado se calcula mediante:
 
 $$t_{db} = N_{cycles} \cdot T_{clk} = 250\,000 \cdot 8\ \text{ns} = 2\ \text{ms}$$
 
-El pulso de un ciclo es indispensable para BTN0, BTN2 y BTN3: a 125 MHz, una pulsación de unos 200 ms dura $0.2\ \text{s} / 8\ \text{ns} = 25 \times 10^{6}$ ciclos, y sin el detector de flanco el registro o el índice avanzarían millones de veces.
+El pulso de un ciclo es indispensable para los controles del sistema (`BTN0`, `BTN2`, `BTN3`). A 125 MHz, una pulsación manual típica de unos 200 ms equivale a: $0.2\ \text{s} / 8\ \text{ns} = 25 \times 10^{6}$ ciclos de reloj
+
+Sin el detector de flanco, los registros o el índice de combinación avanzarían millones de posiciones por cada pulsación.
 
 ### 4.5 `write_selector.v`: registro de escritura
 
-Un contador de 2 bits que avanza con cada pulso de BTN0 (R0 → R1 → R2 → R3 → R0) y decodifica el color del LED RGB según la tabla de la sección 2.4.
+Consiste en un contador secuencial de 2 bits que avanza circularmente con cada pulso de **BTN0** (R0 → R1 → R2 → R3 → R0). 
+
+Mapea directamente la dirección del registro objetivo hacia las salidas del **LED RGB** (`led_r`, `led_g`, `led_b`), permitiendo identificar visualmente cuál registro está seleccionado para escritura:
+
+| Registro Objetivo | Color del LED RGB | R | G | B |
+| :--- | :--- | :-: | :-: | :-: |
+| **R0** | Rojo | 1 | 0 | 0 |
+| **R1** | Verde | 0 | 1 | 0 |
+| **R2** | Azul | 0 | 0 | 1 |
+| **R3** | Blanco | 1 | 1 | 1 |
 
 ### 4.6 `exec_unit.v`: escritura y resultado guardado
 
