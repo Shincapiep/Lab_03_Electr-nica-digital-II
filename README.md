@@ -211,19 +211,29 @@ Mapea directamente la dirección del registro objetivo hacia las salidas del **L
 
 ### 4.6 `exec_unit.v`: escritura y resultado guardado
 
-Cumple dos funciones:
+Este módulo centraliza el control de escrituras en el banco y la retención del resultado mostrado en pantalla mediante dos funciones principales:
 
 a) Árbitro de escritura del banco
 
-| Evento | `write_enable` | Dirección | Dato |
-|---|---|---|---|
-| BTN1 | 1 | Registro seleccionado (BTN0) | `SW[3:0]` |
-| BTN3 con NOT, ROL o ROR | 1 | Registro A del par actual | Resultado de la ALU |
-| BTN3 con ADD, SUB, AND, OR o XOR | 0 | — | — |
+Determina la procedencia de la señal de escritura (`we`), la dirección (`waddr`) y el dato (`wdata`) según el evento ocurrido:
+
+| Evento | `write_enable` (`we`) | Dirección (`waddr`) | Dato de Escritura (`wdata`) |
+| :--- | :-: | :--- | :--- |
+| **BTN1** (Carga manual) | `1` | Registro seleccionado por BTN0 (`write_sel`) | Valor de los switches `SW[3:0]` |
+| **BTN3** con `NOT`, `ROL` o `ROR` | `1` | Registro A del par actual (`addr_a`) | Resultado de la ALU (`alu_result[3:0]`) |
+| **BTN3** con `ADD`, `SUB`, `AND`, `OR` o `XOR` | `0` | — | — |
 
 Las operaciones de un solo operando se escriben de vuelta en el registro A para que sean **acumulativas**: presionar BTN3 varias veces con ROL sigue rotando el mismo registro, y NOT dos veces devuelve el valor original. Las operaciones de dos operandos no modifican los registros. Como NOT, ROL y ROR siempre producen resultados de 4 bits, el valor escrito cabe en el registro sin pérdida.
 
+La condición para identificar operaciones unarias se implementa mediante la expresión lógica:
+
+```verilog
+wire single_op = (sw[2:0] == 3'b101) | (sw[2:1] == 2'b11);
+```
+
 b) Registro del resultado
+
+Las señales `result_lat` y `op_lat` se actualizan únicamente cuando se detecta el pulso `exec_pulse` (BTN3). Aunque la ALU recalcula continuamente de forma combinacional, el módulo de visualización recibe únicamente estos registros retenidos, garantizando que el display conserve la última operación ejecutada aunque cambien posteriormente los switches, el par de registros o el contenido del banco.
 
 ```verilog
 always @(posedge clk) begin
@@ -234,13 +244,11 @@ always @(posedge clk) begin
 end
 ```
 
-`result_lat` y `op_lat` **solo cambian con el pulso de BTN3**. La ALU calcula continuamente, pero el display recibe estos registros y no la salida de la ALU, así que el valor mostrado se conserva aunque cambien los switches, el par de operandos o el contenido de los registros.
-
 ### 4.7 `display_tm1637.v` y `tm1637_driver.v`: display
 
-`display_tm1637` es el módulo de visualización que pide la guía; internamente instancia `tm1637_driver`, que hace dos cosas:
+El módulo `display_tm1637` es un módulo de visualización que instancia al controlador `tm1637_driver`, el cual cumple dos tareas centrales:
 
-1. Conversión del resultado a los 4 dígitos según la operación.
+1. **Conversión del resultado a los 4 dígitos:** Mapea el resultado retenido de 5 bits y el código de operación a los patrones de 7 segmentos de cada dígito.
 2. Comunicación con el TM1637 mediante una máquina de estados que genera el protocolo de 2 hilos (CLK y DIO).
 
 El protocolo del TM1637 es parecido a I²C, pero sin dirección de dispositivo y con los datos LSB primero. Cada refresco envía tres transacciones:
@@ -251,7 +259,7 @@ El protocolo del TM1637 es parecido a I²C, pero sin dirección de dispositivo y
 | 2 | `0xC0`, d3, d2, d1, d0 | Dirección del primer dígito y los 4 patrones de segmentos |
 | 3 | `0x8F` | Display encendido, brillo máximo |
 
-Cada transacción comienza con START (DIO baja con CLK en alto) y termina con STOP (DIO sube con CLK en alto). Cada bit se coloca en DIO con CLK en bajo y se lee en el flanco de subida de CLK. Después de cada byte hay un noveno pulso de ACK, durante el cual el driver libera DIO (`tm_dio = 1'bz`).
+Cada transacción inicia con la condición START (DIO pasa a bajo mientras CLK se mantiene en alto) y finaliza con la condición STOP (DIO pasa a alto mientras CLK está en alto). Los bits cambian en DIO cuando CLK está en bajo y son muestreados en el flanco de subida de CLK. Tras cada byte enviado, existe un noveno pulso de confirmación (ACK), durante el cual el driver libera la línea (`tm_dio = 1'bz`).
 
 Con `TM_BIT_HZ` = 10 kHz, el driver avanza un estado cada:
 
