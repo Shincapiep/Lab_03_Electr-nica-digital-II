@@ -307,15 +307,6 @@ La conversión a decenas y unidades se hace con una tabla de búsqueda (0 a 30),
 
 | Operación | Resultado guardado | Display |
 |---|---|---|
-| **ADD** | $15 + 15$ | $30_{10}$ (`11110`) | `  30` 
-| **SUB** | $10 - 5$ | $5_{10}$ (`00101`) | `   5` 
-| **SUB** | $3 - 8$ | $-5_{10}$ (`11011`) | `-  5` 
-| **AND** | $10 \text{ AND } 5$ | $0_{10}$ (`00000`) | `   0` 
-| **NOT** | $1010_2$ | $0101_2$ | `0101` 
-| **ROL** | $0101_2$ | $1010_2$ | `1010` 
-
-| Operación | Resultado guardado | Display |
-|---|---|---|
 | ADD 10 + 5 | 15 | ` 15` |
 | ADD 15 + 15 | 30 | ` 30` |
 | SUB 10 − 5 | 5 | ` 05` |
@@ -323,15 +314,6 @@ La conversión a decenas y unidades se hace con una tabla de búsqueda (0 a 30),
 | AND 10 & 5 | 0 | ` 0` |
 | NOT 1010 | 0101 | `0101` |
 | ROL 0101 | 1010 | `1010` |
-
-| Operación | Resultado guardado | Display |
-|---|---|---|
-| ADD 10 + 5 | 15 | ` 150` |
-| ADD 15 + 15 | 30 | ` 300` |
-| SUB 10 − 5 | 5 | ` 051` |
-| SUB 3 − 8 | 27 (−5) | `-051` |
-| AND 10 & 5 | 0 | ` 002` |
-| NOT 1010 | 0101 | `0101` |
 
 ---
 
