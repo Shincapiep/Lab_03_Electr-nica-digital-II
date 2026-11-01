@@ -93,7 +93,7 @@ El driver adapta la representación en los 4 dígitos físicos del display segú
 
 **Modo Decimal con Signo (`ADD`, `SUB`, `AND`, `OR`, `XOR`):**
    - **Formato:** `[DIG3: Signo] [DIG2: Decenas] [DIG1: Unidades] [DIG0: Código OP]`
-   - **Sustracción (`SUB`):** Si el resultado de 5 bits indica valor negativo (bit 4 en `1`), el dígito izquierdo (`DIG3`) enciende el segmento de signo negativo (`-`) y la magnitud en complemento a 2 se convierte a decimal.
+   - **Resta:** Si el resultado de 5 bits indica valor negativo (bit 4 en `1`), el dígito izquierdo (`DIG3`) enciende el segmento de signo negativo (`-`) y la magnitud en complemento a 2 se convierte a decimal.
    
 **Modo Binario Directo (`NOT`, `ROL`, `ROR`):**
    - **Formato:** `[DIG3: Bit 3] [DIG2: Bit 2] [DIG1: Bit 1] [DIG0: Bit 0]`
