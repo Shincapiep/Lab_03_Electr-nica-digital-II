@@ -102,7 +102,10 @@ El driver adapta la representación en los 4 dígitos físicos del display segú
 
 ## 3. Arquitectura modular
 
-El diseño se dividió en módulos con una sola responsabilidad cada uno. El módulo superior `top.v` no contiene lógica propia: solo declara las señales internas, instancia los módulos y los conecta.
+
+El sistema se diseñó bajo el principio de división de responsabilidades, descomponiendo la arquitectura en módulos independientes y reutilizables. El módulo superior `top.v` actúa exclusivamente como interconexión estructural: no contiene lógica combinacional ni secuencial propia, limitándose a declarar señales internas, instanciar los bloques y mapearlos a los pines de la FPGA Zybo Z7.
+
+### 3.1 Resumen de Módulos
 
 | Módulo | Tipo de lógica | Responsabilidad |
 |---|---|---|
@@ -115,15 +118,19 @@ El diseño se dividió en módulos con una sola responsabilidad cada uno. El mó
 | `display_tm1637.v` | Secuencial | Módulo de visualización; contiene `tm1637_driver.v`, que convierte el resultado y lo envía al display |
 | `top.v` | Solo conexiones | Integración con los pines de la tarjeta |
 
-Las señales recorren el sistema en este orden:
+### 3.2 Flujo de Datos y Control
 
-1. Los cuatro botones pasan por `debounce` y se convierten en los pulsos `btn0_p` … `btn3_p`.
-2. `comb_selector` entrega las direcciones `addr_a` y `addr_b`, con las que `reg_bank` lee los operandos `data_a` y `data_b`.
-3. La `alu` opera continuamente sobre `data_a`, `data_b` y `SW[2:0]`.
-4. `exec_unit` captura el resultado de la ALU solo cuando llega `btn3_p` y lo pasa a `display_tm1637`.
-5. `exec_unit` también controla la escritura del banco: con `btn1_p` escribe los switches, y con `btn3_p` puede escribir el resultado.
+El procesamiento de información sigue la siguiente secuencia:
 
-Todos los tiempos que dependen del reloj (antirrebote y velocidad del bus del display) son parámetros del `top`. En síntesis se usan los valores reales; en simulación se reducen para que las pruebas duren microsegundos en lugar de segundos.
+1. **Acondicionamiento de entradas:** Las pulsaciones asíncronas de los botones pasan por `debounce` y se convierten en los pulsos `btn0_p` … `btn3_p`.
+2. **Selección de operandos:** `comb_selector.v` entrega las direcciones `addr_a` y `addr_b`, permitiendo que `reg_bank.v` exponga de forma inmediata los datos `read_data_a` y `read_data_b` en las entradas de la ALU.
+3. **Cálculo combinacional:** La `alu.v` procesa continuamente `read_data_a`, `read_data_b` y la operación seleccionada en `SW[2:0]`. Su salida permanece aislada hasta que se decida capturarla.
+4. **Captura y Retención:** Al presionar `BTN3`, la `exec_unit.v` recibe el pulso `btn3_p`, almacena el resultado de 5 bits y el código de operación en sus registros de salida (`result_lat` y `op_lat`) y los envía a `display_tm1637.v`
+5. **Realimentación / Escritura:** La `exec_unit.v` controla la escritura en el banco:
+   - Con `btn1_p`: escribe el valor presente en `SW[3:0]` en el registro seleccionado por `write_selector.v`.
+   - Con `btn3_p`: si la operación es unaria (`NOT`, `ROL`, `ROR`), escribe automáticamente el resultado de la ALU de vuelta en el registro A.
+
+**Nota:** Todos los tiempos que dependen de contadores de reloj (ventana del antirrebote y divisor de frecuencia del bus TM1637) están parametrizados en los módulos superiores (`top.v` y `tb_top.v`). Para la síntesis en hardware se emplean los valores reales (125 MHz); mientras que en la simulación los parámetros se escalan hacia abajo, permitiendo validar el funcionamiento en GTKWave en escala de microsegundos en lugar de segundos.
 
 ---
 
