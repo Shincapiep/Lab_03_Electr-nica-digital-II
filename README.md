@@ -275,31 +275,54 @@ El display TM1637 consta de 4 dígitos físicos de 7 segmentos. La representaci�
 
 | Operaciones | Representación | Dígito 3 (Izq.) | Dígito 2 | Dígito 1 | Dígito 0 (Der.) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **ADD, SUB, AND, OR, XOR** | **Decimal con Signo** | Signo (`-` / Apagado) | Apagado / `0` | Decenas ($0$–$3$) | Unidades ($0$–$9$) |
+| **ADD, SUB, AND, OR, XOR** | **Decimal con Signo** | Signo (`-` / Apagado) | Apagado | Decenas (0 a 3) | Unidades (0 a 9) |
 | **NOT, ROL, ROR** | **Binario Directo** | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
 
-| Operaciones | Representación | Dígito 3 | Dígito 2 | Dígito 1 | Dígito 0 |
-|---|---|---|---|---|---|
-| ADD, SUB, AND, OR, XOR | Decimal | Signo (`-` o apagado) | Decenas | Unidades | Código de la operación (0 a 4) |
-| NOT, ROL, ROR | **Binario** | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
+A. **Modo Decimal con Signo:**
+   - Se aplica a las operaciones aritméticas (`ADD`, `SUB`) y lógicas (`AND`, `OR`, `XOR`) para mostrar la magnitud final de forma numéricamente directa.
+   - **Formato numérico:** El dígito menos significativo (`DIG0`) representa las unidades y el dígito contiguo (`DIG1`) las decenas, permitiendo leer el resultado de forma natural como un entero decimal de derecha a izquierda.
 
-Decimal para las operaciones aritméticas, porque su resultado es un número, y para AND, OR y XOR por consistencia con ellas. El último dígito muestra el código de la operación ejecutada, de modo que se puede saber qué se calculó sin mirar los switches, que pudieron haber cambiado después de presionar BTN3.
+B. **Modo Binario Directo:**
+   - Se utiliza en `NOT`, `ROL` y `ROR` porque son transformaciones bit a bit. Representar operaciones de desplazamiento en decimal ocultaría la manipulación de los bits (por ejemplo, ver $0101 \to 1010$ es inmediato en binario, mientras que en decimal se leería ambiguamente como 5 a 10).
 
-Binario para NOT y las rotaciones, porque son operaciones sobre la posición de los bits; en decimal no se notaría que $0101 \to 1010$ es una rotación.
+### 5.1 Interpretación del Resultado de 5 Bits
 
-La interpretación del resultado de 5 bits cambia según la operación:
+La ALU entrega una salida de 5 bits (`result[4:0]`), cuya interpretación varía según la operación:
 
-| Operación | Interpretación | Cálculo de la magnitud |
-|---|---|---|
-| ADD | Sin signo, 5 bits (0 a 30) | El valor tal cual |
-| SUB | Con signo, complemento a 2 | Si el bit 4 es 1: signo `-` y magnitud $\overline{r} + 1$ |
-| AND, OR, XOR | Sin signo, 4 bits | Bits 3 a 0 |
+| Operación | Tipo de Dato | Rango Útil | Cálculo de la Magnitud Mostrada |
+| :--- | :--- | :-: | :--- |
+| **ADD** | Sin signo (5 bits) | 0 a 30 | El valor directo `result[4:0]` |
+| **SUB** | Con signo (Complemento a 2) | -15 a +15 | Si `result[4] == 1`: activa signo `-` y calcula magnitud como $\overline{r} + 1$ |
+| **AND, OR, XOR** | Sin signo (4 bits) | 0 a 15 | Los 4 bits menos significativos `result[3:0]` |
 
-Por ejemplo, para $3 - 8$ el resultado es $11011_2$. Como el bit 4 es 1, la magnitud es $\overline{11011} + 1 = 00100 + 1 = 00101_2 = 5$, y el display muestra `-051` (signo, 0, 5 y la operación 1).
+### Ejemplo de Cálculo en Sustracción Negativa:
+Para la operación $3 - 8$, la ALU entrega $11011_2$ (27). Al ser una sustracción (`SUB`), el sistema evalúa el bit de signo (`result[4] = 1`):
+-  **Activación de signo:** El dígito 3 (`DIG3`) enciende el segmento negativo (`-`).
+-  **Obtención de la magnitud:** $\overline{11011}_2 + 1 = 00100_2 + 1 = 00101_2 = 5_{10}$
+-  **Proyección en pantalla:** El display muestra `-  5` (Signo `-`, Decenas `0`, Unidades `5`).
 
 La conversión a decenas y unidades se hace con una tabla de búsqueda (0 a 30), sin divisiones, para que la síntesis sea sencilla.
 
-## Ejemplos:
+### 5.2 Ejemplos de Visualización:
+
+| Operación | Resultado guardado | Display |
+|---|---|---|
+| **ADD** | $15 + 15$ | $30_{10}$ (`11110`) | `  30` | Signo apagado, Decenas `3`, Unidades `0` |
+| **SUB** | $10 - 5$ | $5_{10}$ (`00101`) | `   5` | Signo apagado, Decenas `0`, Unidades `5` |
+| **SUB** | $3 - 8$ | $-5_{10}$ (`11011`) | `-  5` | Signo `-`, Decenas `0`, Unidades `5` |
+| **AND** | $10 \text{ AND } 5$ | $0_{10}$ (`00000`) | `   0` | Signo apagado, Decenas `0`, Unidades `0` |
+| **NOT** | $1010_2$ | $0101_2$ | `0101` | Muestra directa de bits $b_3 b_2 b_1 b_0$ |
+| **ROL** | $0101_2$ | $1010_2$ | `1010` | Muestra directa de bits $b_3 b_2 b_1 b_0$ |
+
+| Operación | Resultado guardado | Display |
+|---|---|---|
+| ADD 10 + 5 | 15 | ` 15` |
+| ADD 15 + 15 | 30 | ` 30` |
+| SUB 10 − 5 | 5 | ` 05` |
+| SUB 3 − 8 | 27 (−5) | `-05` |
+| AND 10 & 5 | 0 | ` 0` |
+| NOT 1010 | 0101 | `0101` |
+| ROL 0101 | 1010 | `1010` |
 
 | Operación | Resultado guardado | Display |
 |---|---|---|
