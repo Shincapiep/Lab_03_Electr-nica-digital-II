@@ -34,7 +34,7 @@ El flujo de uso es:
 1. Se elige el registro de destino con BTN0 (el LED RGB indica cuál está seleccionado).
 2. Se coloca un valor en los switches y se escribe en ese registro con BTN1.
 3. Con BTN2 se recorren los pares de registros que servirán como operandos A y B (los LEDs LD0–LD3 indican cuáles participan).
-4. Se coloca el código de operación en SW[2:0] y se presiona BTN3: la ALU ejecuta la operación generando un resultado de 5 bits (para manejar acarreo en adición y signo en sustracción) y lo captura en el registro de salida. Nota: Si la operación seleccionada es de un solo operando (NOT, ROL, ROR), el sistema ejecuta una escritura acumulativa guardando de forma automática el resultado en el registro asignado como operando A.
+4. Se coloca el código de operación en SW[2:0] y se presiona BTN3. La ALU ejecuta la operación generando un resultado de 5 bits (para manejar acarreo en adición y signo en sustracción) y lo captura en el registro de salida. Aunque, si la operación seleccionada es de un solo operando (NOT, ROL, ROR), el sistema ejecuta una escritura acumulativa guardando de forma automática el resultado en el registro asignado como operando A.
 5. El display muestra el resultado de la última operación ejecutada y lo conserva hasta la siguiente pulsación de BTN3, aunque cambien los switches, los operandos o el par seleccionado.
 
 ---
