@@ -138,7 +138,18 @@ El procesamiento de información sigue la siguiente secuencia:
 
 ### 4.1 `alu.v`: ALU combinacional
 
-Recibe dos operandos de 4 bits y entrega un resultado de **5 bits**. El bit adicional conserva el acarreo de la suma y el signo de la resta, que se perderían con una salida de 4 bits.
+Recibe dos operandos de 4 bits (`a` y `b`) y entrega un resultado de 5 bits (`result`). El bit adicional (`result[4]`) conserva el acarreo de la suma y la extensión de signo de la resta, los cuales se perderían con una salida de 4 bits.
+
+| op | Operación | Resultado en Verilog | Rango | Ejemplo ($A = 10$, $B = 5$) |
+| :-: | :--- | :--- | :-: | :-: |
+| **000** | **ADD** | `{1'b0, a} + {1'b0, b}` | 0 a 30 | 15 (`01111`) |
+| **001** | **SUB** | `{1'b0, a} - {1'b0, b}` | -15 a 15 | 5 (`00101`) |
+| **010** | **AND** | `{1'b0, a & b}` | 0 a 15 | 0 (`00000`) |
+| **011** | **OR** | `{1'b0, a \| b}` | 0 a 15 | 15 (`01111`) |
+| **100** | **XOR** | `{1'b0, a ^ b}` | 0 a 15 | 15 (`01111`) |
+| **101** | **NOT** | `{1'b0, ~a}` | 0 a 15 | 5 (`00101`) |
+| **110** | **ROL** | `{1'b0, a[2:0], a[3]}` (Rotación izq.) | 0 a 15 | 5 (`00101`) |
+| **111** | **ROR** | `{1'b0, a[0], a[3:1]}` (Rotación der.) | 0 a 15 | 5 (`00101`) |
 
 | `op` | Operación | Resultado | Rango | Ejemplo (A = 10, B = 5) |
 |---|---|---|---|---|
