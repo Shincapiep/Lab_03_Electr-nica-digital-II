@@ -61,6 +61,8 @@ Como el dato solo se lee al presionar BTN1 y la operación solo al presionar BTN
 | BTN2 | Avanza al siguiente par de operandos (A, B) |
 | BTN3 | Ejecuta la operación `SW[2:0]` y actualiza el resultado del display |
 
+**Nota:** Todas las entradas de los botones (`BTN0`–`BTN3`) pasan internamente por el módulo `debounce.v`. Este implementa un sincronizador de dos etapas, un contador de filtrado configurado a 250,000 ciclos (equivalente a 2 ms a 125 MHz) y un detector de flanco ascendente. Esto garantiza que cada pulsación mecánica entregue exactamente un único pulso limpio (`btn_pulse`) de 1 ciclo de reloj, evitando lecturas múltiples por rebote.
+
 ### 2.3 LEDs
 
 Cada LED corresponde a un registro y se enciende si el registro participa en el par de operandos actual:
@@ -85,6 +87,30 @@ Indica el registro seleccionado para escritura:
 | R2 | Azul | 0 | 0 | 1 |
 | R3 | Blanco | 1 | 1 | 1 |
 
+### 2.5 Display TM1637
+
+El resultado retenido en la unidad de ejecución (`result_lat` y `op_lat`) se envía al display externo TM1637 mediante un módulo driver dedicado que emula el protocolo serie de 2 hilos mediante una FSM.
+
+#### Conexión Física (Puerto Pmod JE)
+| Señal TM1637 | Pin FPGA (Zybo Z7) | Función |
+| :--- | :--- | :--- |
+| **tm_clk** | V12 (JE[0]) | Reloj de comunicación serie (10 kHz) |
+| **tm_dio** | W16 (JE[1]) | Línea bidireccional de datos (con Pull-up interno) |
+| **VCC** | 3.3V (JE[5]) | Alimentación |
+| **GND** | GND (JE[4]) | Tierra |
+
+#### Estrategia Híbrida de Visualización
+El driver adapta la representación en los 4 dígitos físicos del display según el tipo de operación (`op_code`):
+
+1. **Modo Decimal con Signo (`ADD`, `SUB`, `AND`, `OR`, `XOR`):**
+   - **Formato:** `[DIG3: Signo] [DIG2: Decenas] [DIG1: Unidades] [DIG0: Código OP]`
+   - **Sustracción (`SUB`):** Si el resultado de 5 bits indica valor negativo (bit 4 en `1`), el dígito izquierdo (`DIG3`) enciende el segmento de signo negativo (`-`) y la magnitud en complemento a 2 se convierte a decimal.
+   - **Identificador de Operación:** El dígito menos significativo (`DIG0`) muestra el código numérico de la operación ejecutada (`0` a `4`).
+   - **Optimización de síntesis:** La conversión a BCD (decenas y unidades) se realiza mediante una tabla de búsqueda combinacional (`bcd_lookup`), evitando operadores de división (`/`) y módulo (`%`) en el hardware.
+
+2. **Modo Binario Directo (`NOT`, `ROL`, `ROR`):**
+   - **Formato:** `[DIG3: Bit 3] [DIG2: Bit 2] [DIG1: Bit 1] [DIG0: Bit 0]`
+   - Los 4 dígitos muestran de forma directa la palabra binaria resultante de 4 bits.
 ---
 
 ## 3. Arquitectura modular
