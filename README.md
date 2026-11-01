@@ -307,12 +307,12 @@ La conversión a decenas y unidades se hace con una tabla de búsqueda (0 a 30),
 
 | Operación | Resultado guardado | Display |
 |---|---|---|
-| **ADD** | $15 + 15$ | $30_{10}$ (`11110`) | `  30` | Signo apagado, Decenas `3`, Unidades `0` |
-| **SUB** | $10 - 5$ | $5_{10}$ (`00101`) | `   5` | Signo apagado, Decenas `0`, Unidades `5` |
-| **SUB** | $3 - 8$ | $-5_{10}$ (`11011`) | `-  5` | Signo `-`, Decenas `0`, Unidades `5` |
-| **AND** | $10 \text{ AND } 5$ | $0_{10}$ (`00000`) | `   0` | Signo apagado, Decenas `0`, Unidades `0` |
-| **NOT** | $1010_2$ | $0101_2$ | `0101` | Muestra directa de bits $b_3 b_2 b_1 b_0$ |
-| **ROL** | $0101_2$ | $1010_2$ | `1010` | Muestra directa de bits $b_3 b_2 b_1 b_0$ |
+| **ADD** | $15 + 15$ | $30_{10}$ (`11110`) | `  30` 
+| **SUB** | $10 - 5$ | $5_{10}$ (`00101`) | `   5` 
+| **SUB** | $3 - 8$ | $-5_{10}$ (`11011`) | `-  5` 
+| **AND** | $10 \text{ AND } 5$ | $0_{10}$ (`00000`) | `   0` 
+| **NOT** | $1010_2$ | $0101_2$ | `0101` 
+| **ROL** | $0101_2$ | $1010_2$ | `1010` 
 
 | Operación | Resultado guardado | Display |
 |---|---|---|
