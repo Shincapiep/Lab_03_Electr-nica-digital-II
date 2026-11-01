@@ -271,7 +271,12 @@ Un bit ocupa 3 estados (150 µs) y una trama completa unos 220 estados (≈ 11 m
 
 ## 5. Estrategia de visualización
 
-El display tiene 4 dígitos. La representación depende del tipo de operación, para que cada resultado se lea de la forma más natural:
+El display TM1637 consta de 4 dígitos físicos de 7 segmentos. La representación visual se adapta dinámicamente según el tipo de operación ejecutada para permitir una lectura intuitiva y sin ambigüedades:
+
+| Operaciones | Representación | Dígito 3 (Izq.) | Dígito 2 | Dígito 1 | Dígito 0 (Der.) |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **ADD, SUB, AND, OR, XOR** | **Decimal con Signo** | Signo (`-` / Apagado) | Apagado / `0` | Decenas ($0$–$3$) | Unidades ($0$–$9$) |
+| **NOT, ROL, ROR** | **Binario Directo** | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
 
 | Operaciones | Representación | Dígito 3 | Dígito 2 | Dígito 1 | Dígito 0 |
 |---|---|---|---|---|---|
