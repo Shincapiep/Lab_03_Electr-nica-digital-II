@@ -607,15 +607,19 @@ Todas las pulsaciones simuladas en tb_top.v incluyen 3 rebotes al presionar y 3 
 
 ## 8. Implementación y verificación en FPGA
 Primeramente se guardaron números en los 4 registros como se muestra a continuación, en el registro cero R0, se guardo el número 10, en R1 el número 5, en R2 y R3 el número 15:
+
 https://drive.google.com/file/d/1w1gWungf7QiFWou6aUTFeEyB9vM8v2qn/view?usp=drivesdk
 
 Luego se operan los registros R0 y R1 cambiando a dicha combinación con el botón 2, usando el codigo de operación 000 que corresponde a la suma:
+
 https://drive.google.com/file/d/1bnQcw_unQIY-TTxb7CVSgvAMS_ioFWBI/view?usp=drivesdk
 
 Para restar, se hace un primer intento con los registros R0 y R1, restandolos respectivamente, el resultado de la operación 10 - 5 es 5. En un segundo intento selecciono primero R1 seguido de R2, haciendo 5 - 15 que da -10:
+
 https://drive.google.com/file/d/1TPZUQsACH-4WeudJQqLmJlbX3m-y6S9-/view?usp=drivesdk
 
-en el siguiente ejemplo se guarda un número nuevo en R3, cambiandolo de 15 (1111_b) a 3 (0011_b) y asi operar R0 y R3 con la operación 010 que corresponde a la compuerta lógica and:
+en el siguiente ejemplo se guarda un número nuevo en R3, cambiandolo de 15 (1111_b) a 3 (0011_b) y asi operar R0 y R3 con la operación 010 que corresponde a la compuerta lógica and, de forma que 1010_b & 0011_b es 0010_b (2 en decimal), para el caso de la or se usa el código 011 con resultado 11 en decimal, y para la xor con código 100, el resultado es 9 en decimal:
+
 https://drive.google.com/file/d/1wP7KGGtHgJl_v4MoVIINeVXXPNSVTVq-/view?usp=drivesdk
 
 
