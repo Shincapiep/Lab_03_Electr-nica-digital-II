@@ -609,6 +609,13 @@ Todas las pulsaciones simuladas en tb_top.v incluyen 3 rebotes al presionar y 3 
 Primeramente se guardaron números en los 4 registros como se muestra a continuación, en el registro cero R0, se guardo el número 10, en R1 el número 5, en R2 y R3 el número 15:
 https://drive.google.com/file/d/1w1gWungf7QiFWou6aUTFeEyB9vM8v2qn/view?usp=drivesdk
 
+Luego se operan los registros R0 y R1 cambiando a dicha combinación con el botón 2, usando el codigo de operación 000 que corresponde a la suma:
+https://drive.google.com/file/d/1bnQcw_unQIY-TTxb7CVSgvAMS_ioFWBI/view?usp=drivesdk
+
+Para restar, se hace un primer intento con los registros R0 y R1, restandolos respectivamente, el resultado de la operación 10 - 5 es 5. En un segundo intento selecciono primero R1 seguido de R2, haciendo 5 - 15 que da -10:
+https://drive.google.com/file/d/1TPZUQsACH-4WeudJQqLmJlbX3m-y6S9-/view?usp=drivesdk
+
+
 ---
 
 ## 9. Conclusiones
