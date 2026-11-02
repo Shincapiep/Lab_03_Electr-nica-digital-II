@@ -626,7 +626,7 @@ En el siguiente ejemplo se guarda un número nuevo en R3, cambiandolo de 15 (111
 https://drive.google.com/file/d/1wP7KGGtHgJl_v4MoVIINeVXXPNSVTVq-/view?usp=drivesdk
 
 
-Las siguientes operaciones son sobre un registro, por lo que el resultado en el display se muestra en binario para notarse mejor, además al seleccionar la combinación entre dos registros ejemplo R1 con R2, la operaciones se hace sobre el primero de los dos es decir R1. en el video se muestra como se guarda nuevamente el 3 en el segundo registro, es decir R1, y se invierte con la compuerta NOT:
+Las siguientes operaciones son sobre un registro, por lo que el resultado en el display se muestra en binario para notarse mejor, además al seleccionar la combinación entre dos registros ejemplo R1 con R2, la operacion se hace sobre el primero de los dos es decir R1. en el video se muestra como se guarda nuevamente el 3 en el segundo registro, es decir R1, y se invierte con la compuerta NOT:
 
 https://drive.google.com/file/d/1tFtb5gp7yYNuVHha36w33OE7SW92G7I3/view?usp=drivesdk
 
