@@ -92,7 +92,7 @@ Indica el registro seleccionado para escritura:
 El driver adapta la representación en los 4 dígitos físicos del display según el tipo de operación:
 
 **Modo Decimal con Signo (`ADD`, `SUB`, `AND`, `OR`, `XOR`):**
-   - **Formato:** `[DIG3: Signo] [DIG2: Decenas] [DIG1: Unidades] [DIG0: Código OP]`
+   - **Formato:** `[DIG3: Dependiente de operacion] [DIG2: Signo] [DIG1: Decenas] [DIG0: Unidades]`
    - **Resta:** Si el resultado de 5 bits indica valor negativo (bit 4 en `1`), el dígito izquierdo (`DIG3`) enciende el segmento de signo negativo (`-`) y la magnitud en complemento a 2 se convierte a decimal.
    
 **Modo Binario Directo (`NOT`, `ROL`, `ROR`):**
