@@ -444,11 +444,11 @@ Cada pulso de `next_comb` incrementa `comb_idx` en 1 y actualiza las direcciones
 
 **NOTA:** `0x40` representa el segmento de signo negativo (-), `0x00` indica dígito apagado, y los demás valores mapean la codificación de 7 segmentos de los dígitos 0 a 9.
 
-<img width="955" height="76" alt="image" src="https://github.com/user-attachments/assets/ce216b56-d65b-4611-a77b-f5dced3a2ce9" />
+<img width="1634" height="155" alt="image" src="https://github.com/user-attachments/assets/2806b714-b331-43f5-907d-7d4058904943" />
 
 > _[Captura de GTKWave con zoom en una trama: `tm_clk`, `tm_dio`, `state`, `cur_byte`]_
 
-#### Respuesta de las Señales ante Operaciones de la ALU
+#### A. Respuesta de las Señales ante Operaciones de la ALU
 En las formas de onda se observan 3 intervalos principales de $30\ \mu\text{s}$ donde las entradas `result[4:0]` y `op_code[2:0]` cambian para validar los distintos modos de visualización:
 
 | Intervalo de Tiempo | Entradas (`result` / `op_code`) | Modo de Operación | Procesamiento de la FPGA | Lo que muestra el Display |
@@ -457,22 +457,129 @@ En las formas de onda se observan 3 intervalos principales de $30\ \mu\text{s}$ 
 | **$30\ \mu\text{s}$ a $60\ \mu\text{s}$** | `result = 1B` ($11011_2$)<br>`op_code = 001` (`SUB`) | Decimal Negativo | Detecta `result[4] = 1` (signo negativo). Calcula la magnitud absolutaf $\vert{}-5\vert{} = 5$ y activa el segmento `-`. | `-  5`<br>(Signo `-` y dígito 5) |
 | **$60\ \mu\text{s}$ a $90\ \mu\text{s}$** | `result = 05` ($00101_2$)<br>`op_code = 110` (`ROL`) | Binario Directo | Desactiva la conversión BCD y asigna cada bit de `result[3:0]` directamente a un dígito. | `0101`<br>(Un bit en cada dígito) |
 
-#### Paso 2: Anatomía del Paquete TM1637 (Transmisión por el Bus)
-Cada paquete completo de comunicación serie síncrona transmitido por la FSM consta de 3 transacciones seguidas en las líneas `tm_clk` y `tm_dio`:
+### B. Anatomía Detallada del Paquete y Mapeo de LEDs (Protocolo TM1637)
 
-1. **Paquete de Configuración de Comando:**
-   `[START] -> Envía 0x40 (8 bits + ACK) -> [STOP]`
-   Configura el chip controlador TM1637 en modo de escritura con autoincremento de dirección.
-2. **Paquete de Datos de Segmentos:**
-   `[START] -> Envía 0xC0 (Dirección Base) -> Byte DIG3 (seg3) -> Byte DIG2 (seg2) -> Byte DIG1 (seg1) -> Byte DIG0 (seg0) -> [STOP]`
-   Transfiere la matriz de bits ON/OFF para encender los segmentos de los 4 dígitos.
-3. **Paquete de Control de Pantalla:**
-   `[START] -> Envía 0x8F (8 bits + ACK) -> [STOP]`
-   Enciende la pantalla y fija el brillo al máximo nivel.
+Para interpretar la transmisión serie en GTKWave y comprender cómo la FPGA controla los números del display utilizando únicamente dos cables (`tm_clk` y `tm_dio`), es necesario desglosar la información desde el LED individual hasta la estructura completa del bus serie.
 
-> Cada bit se transmite en el flanco de subida de `tm_clk`. En el noveno pulso de reloj de cada byte, la línea `tm_dio` pasa a alta impedancia (`1'bz`) para recibir el acuse de recibo (**ACK**) del chip receptor.
+#### Codificación de Segmentos (Mapeo de Bits a LEDs)
 
-#### Paso 3: Mecanismo de Refresco Continuo
+Cada uno de los 4 dígitos físicos consta de 8 LEDs independientes: 7 segmentos principales para representar los números y un punto decimal (`dp`).
+
+```text
+       --- a ---
+      |         |
+      f         b
+      |         |
+       --- g ---
+      |         |
+      e         c
+      |         |
+       --- d ---   . (dp)
+```
+
+La FPGA empaqueta el estado de encendido (`1`) o apagado (`0`) de los 8 LEDs en un único byte de datos, siguiendo el siguiente mapeo:
+
+| Bit | Bit 7 | Bit 6 | Bit 5 | Bit 4 | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
+|:---:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|:-----:|
+| Segmento | dp | g | f | e | d | c | b | a |
+
+**Ejemplo 1: Dígito '5'**
+
+Se encienden los segmentos `a`, `f`, `g`, `c` y `d`.
+
+$$
+[\text{dp},g,f,e,d,c,b,a]=[0,1,1,0,1,1,0,1]
+$$
+
+$$
+01101101_2 = \boxed{0x6D}
+$$
+
+**Ejemplo 2: Signo negativo '-'**
+
+Se enciende únicamente la barra central `g`.
+
+$$
+[\text{dp},g,f,e,d,c,b,a]=[0,1,0,0,0,0,0,0]
+$$
+
+$$
+01000000_2 = \boxed{0x40}
+$$
+
+#### Relación entre Señales Físicas (`tm_clk`, `tm_dio`) y el Display
+
+El chip controlador TM1637 actúa como un dispositivo de conversión serie-paralelo, transformando la transmisión de datos mediante dos líneas en las señales de control necesarias para los 32 LEDs del módulo físico.
+
+- **`tm_clk` (Reloj síncrono):** Marca la cadencia de la transmisión. En cada flanco de subida de `tm_clk`, el receptor TM1637 muestrea y almacena el estado presente en la línea de datos.
+
+- **`tm_dio` (Línea de datos serie):** Transporta la información de los segmentos bit por bit, en orden LSB primero (*Least Significant Bit*). Un nivel alto (`3.3 V`) representa un `1`, mientras que un nivel bajo (`0 V`) representa un `0`.
+
+#### Estructura de las 3 Transacciones por Ráfaga
+
+Cada ciclo de actualización completo generado por la FSM produce 3 transacciones consecutivas, delimitadas por condiciones de `START` y `STOP`.
+
+**Estructura general de la ráfaga de refresco:**
+
+```text
+[RÁFAGA COMPLETA DE REFRESCO]
+   |
+   ├── 1. Transacción de Configuración (Comando 0x40)
+   |
+   ├── 2. Transacción de Datos (Comando 0xC0 + DIG3 + DIG2 + DIG1 + DIG0)
+   |
+   └── 3. Transacción de Control de Pantalla (Comando 0x8F)
+```
+
+**Transacción 1: Configuración de Modo (0x40)**
+
+```text
+[START] -> Envía 0x40 -> [STOP]
+```
+
+**Función:** Indica al chip TM1637 que opere en modo de escritura de datos con incremento automático de dirección, permitiendo recorrer secuencialmente las posiciones de memoria correspondientes a los 4 dígitos.
+
+**Transacción 2: Ráfaga de Datos de Segmentos (0xC0 + 4 Bytes)**
+
+```text
+[START] -> Envía 0xC0 -> Byte DIG3 -> Byte DIG2 -> Byte DIG1 -> Byte DIG0 -> [STOP]
+```
+
+**Función:** El comando `0xC0` establece la dirección de memoria base (dígito 3, extremo izquierdo). A continuación, la FPGA transmite consecutivamente los 4 bytes codificados con los patrones de encendido de los LEDs para los dígitos 3, 2, 1 y 0.
+
+**Transacción 3: Control de Encendido y Brillo (0x8F)**
+
+```text
+[START] -> Envía 0x8F -> [STOP]
+```
+
+**Función:** Activa las salidas del display e ilumina los segmentos al 100 % de brillo. Mantener la pantalla apagada durante la transmisión previa permite evitar parpadeos visuales (*flicker*) durante la actualización.
+
+#### Confirmación por Acuse de Recibo (ACK - 9.º Pulso de Reloj)
+
+La transmisión de cada byte individual en el bus requiere 9 ciclos de `tm_clk`, y no solamente 8. Los primeros 8 ciclos corresponden a los bits de información, mientras que el noveno se utiliza para la confirmación de recepción (ACK).
+
+**Representación temporal de la transmisión:**
+
+```text
+Clock:   1   2   3   4   5   6   7   8     9 (ACK)
+        +---+---+---+---+---+---+---+---+ +---+
+CLK:  --+   +---+   +---+   +---+   +---+-+   +---
+
+       <------ Bits 0 a 7 (LSB -> MSB) ------>
+
+DIO:   X===X===X===X===X===X===X===X===X   0   X
+                                            |
+                                    TM1637 fuerza 0 V
+```
+
+**Pulsos 1 al 8:** La FPGA mantiene el control de la línea `tm_dio` y transmite los 8 bits de datos secuencialmente, comenzando por el bit menos significativo (LSB).
+
+**Pulso 9 (ACK):** Durante el noveno pulso de reloj, la FPGA conmuta el puerto `tm_dio` a alta impedancia (`1'bz`), liberando la línea de datos. Si el chip TM1637 recibió correctamente el byte, lleva la línea `tm_dio` a nivel bajo (`0 V`), generando el pulso de confirmación ACK que indica que el dispositivo ha reconocido la transmisión.
+
+Este mecanismo permite verificar el acoplamiento y la comunicación entre la FPGA y el controlador del display.
+
+#### C. Mecanismo de Refresco Continuo
 Las ráfagas de pulsos se repiten periódicamente debido a:
 1. **Bucle de la FSM (`ST_WAIT`):** El módulo `tm1637_driver` opera en un ciclo continuo que transmite la trama, aguarda en el estado `ST_WAIT` y vuelve a transmitir automáticamente.
 2. **Aceleración en Simulación:** En la FPGA real, la espera entre refrescos es de $\sim 0.1\text{ s}$. En el testbench se ajusta a `.REFRESH_TICKS(50)` para observar las ráfagas en escala de microsegundos ($\mu\text{s}$) sin ralentizar el simulador.
