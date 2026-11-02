@@ -615,6 +615,9 @@ https://drive.google.com/file/d/1bnQcw_unQIY-TTxb7CVSgvAMS_ioFWBI/view?usp=drive
 Para restar, se hace un primer intento con los registros R0 y R1, restandolos respectivamente, el resultado de la operación 10 - 5 es 5. En un segundo intento selecciono primero R1 seguido de R2, haciendo 5 - 15 que da -10:
 https://drive.google.com/file/d/1TPZUQsACH-4WeudJQqLmJlbX3m-y6S9-/view?usp=drivesdk
 
+en el siguiente ejemplo se guarda un número nuevo en R3, cambiandolo de 15 (1111_b) a 3 (0011_b) y asi operar R0 y R3 con la operación 010 que corresponde a la compuerta lógica and:
+https://drive.google.com/file/d/1wP7KGGtHgJl_v4MoVIINeVXXPNSVTVq-/view?usp=drivesdk
+
 
 ---
 
