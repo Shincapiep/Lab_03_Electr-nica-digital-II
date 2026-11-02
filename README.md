@@ -591,7 +591,7 @@ Las ráfagas de pulsos se repiten periódicamente debido a:
 =============================================
 ```
 
-Todas las pulsaciones del testbench incluyen 3 rebotes al presionar y 3 al soltar, más cortos que `DEBOUNCE_CYCLES`. Que el registro de escritura y el índice de pares avancen exactamente un paso por pulsación confirma que el antirrebote funciona.
+Todas las pulsaciones simuladas en tb_top.v incluyen 3 rebotes al presionar y 3 al soltar, con duraciones menores a DEBOUNCE_CYCLES. Que el registro de escritura y el índice de combinaciones avancen exactamente un paso por pulsación confirma la efectividad del módulo antirrebote.
 
 ![Simulación del sistema completo](lab03/sim/tb_top_general.png)
 
@@ -601,7 +601,7 @@ Todas las pulsaciones del testbench incluyen 3 rebotes al presionar y 3 al solta
 
 > _[Captura de GTKWave con zoom en T6: `btn1`, `btn2`, `btn3`, `sw`, `dut.data_a`, `dut.data_b`, `dut.alu_result`, `dut.u_exec.result_lat`]_
 
-En la prueba T6 se observa que `alu_result` cambia cada vez que cambian los operandos o los switches, mientras que `result_lat` permanece fijo hasta el pulso de BTN3.
+**Análisis de la prueba T6:** En GTKWave se observa que `alu_result` cambia instantáneamente cada vez que varían los operandos o los switches. Sin embargo, `result_lat` permanece fijo en su valor previo hasta que se recibe el pulso producido por BTN3, garantizando la conservación del resultado en pantalla.
 
 ---
 
@@ -610,3 +610,10 @@ En la prueba T6 se observa que `alu_result` cambia cada vez que cambian los oper
 ---
 
 ## 9. Conclusiones
+
+* **Efectividad del Diseño Modular y Separación de Responsabilidades:** La descomposición del procesador de datos en bloques independientes (`alu.v`, `reg_bank.v`, `comb_selector.v`, `exec_unit.v` y `display_tm1637.v`) facilitó la depuración individual y la integración en `top.v`. Mantener el módulo superior exclusivamente como una capa de interconexión estructural optimizó la legibilidad del código y previno la inferencia accidental de lógica no deseada durante la síntesis en Vivado.
+* **Desacoplamiento Combinacional y Persistencia mediante Registros:** La implementación de la unidad de ejecución (`exec_unit.v`) resolvió de forma robusta la conservación del resultado en pantalla. Al interponer un registro latch (`result_lat` y `op_lat`) activado únicamente por la pulsación de BTN3, se logró aislar la naturaleza combinacional e instantánea de la ALU respecto al módulo de visualización, garantizando que los datos exhibidos en el display permanezcan congelados e inalterados ante variaciones posteriores en los switches o en la selección de operandos.
+* **Optimización de Recursos en Hardware mediante Tablas de Búsqueda (LUT):** La conversión de la magnitud de 5 bits a formato BCD (decenas y unidades) se resolvió de manera eficiente mediante la función combinacional `bcd_lookup`. Esta estrategia eliminó la necesidad de instanciar operadores aritméticos como división o módulo, reduciendo significativamente el consumo de bloques lógicos en la FPGA Zybo Z7.
+* **Estrategia Híbrida de Visualización Adaptada al Contexto de la Operación:** La conmutación entre el modo Decimal con Signo (para `ADD`, `SUB`, `AND`, `OR`, `XOR`) y el modo Binario Directo (para `NOT`, `ROL`, `ROR`) demostró ser la solución más intuitiva para la interfaz de usuario. Mientras que las operaciones aritméticas requieren interpretación de magnitudes y complemento a 2, las operaciones unarias y de rotación demandan la observación directa de la posición bit a bit, lo cual se enmascararía si se representaran en base decimal.
+* **Inmunidad al Rebote Mecánico y Acondicionamiento de Señales:** La integración del módulo `debounce.v` (sincronizador de 2 flip-flops, filtro contador a $2\text{ ms}$ y detector de flanco ascendente) resultó indispensable para la estabilidad del sistema. Operando a una frecuencia de reloj de $125\text{ MHz}$, la conversión de pulsaciones manuales asíncronas en pulso síncronos de un único ciclo de reloj garantizó que los contadores de selección de registro (`BTN0`) y combinaciones (`BTN2`) avanzaran exactamente una posición por toque, previniendo estados de carrera o múltiples transiciones indeseadas.
+* **Validación Formal en Simulación mediante Modelado de Bus:** El desarrollo del monitor síncrono `tm1637_monitor.v` y la parametrización temporal reducida en los testbenches permitieron verificar en GTKWave la transmisión exacta de tramas del protocolo TM1637 (condiciones START/STOP, envío LSB primero y pulsos de ACK). La comprobación previa por simulación aseguró una transición inmediata y exitosa hacia la implementación física sobre la tarjeta FPGA Zybo Z7.
