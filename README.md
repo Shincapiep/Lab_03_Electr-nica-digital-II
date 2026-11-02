@@ -610,17 +610,29 @@ Primeramente se guardaron números en los 4 registros como se muestra a continua
 
 https://drive.google.com/file/d/1w1gWungf7QiFWou6aUTFeEyB9vM8v2qn/view?usp=drivesdk
 
+
 Luego se operan los registros R0 y R1 cambiando a dicha combinación con el botón 2, usando el codigo de operación 000 que corresponde a la suma:
 
 https://drive.google.com/file/d/1bnQcw_unQIY-TTxb7CVSgvAMS_ioFWBI/view?usp=drivesdk
+
 
 Para restar, se hace un primer intento con los registros R0 y R1, restandolos respectivamente, el resultado de la operación 10 - 5 es 5. En un segundo intento selecciono primero R1 seguido de R2, haciendo 5 - 15 que da -10:
 
 https://drive.google.com/file/d/1TPZUQsACH-4WeudJQqLmJlbX3m-y6S9-/view?usp=drivesdk
 
-en el siguiente ejemplo se guarda un número nuevo en R3, cambiandolo de 15 (1111_b) a 3 (0011_b) y asi operar R0 y R3 con la operación 010 que corresponde a la compuerta lógica and, de forma que 1010_b & 0011_b es 0010_b (2 en decimal), para el caso de la or se usa el código 011 con resultado 11 en decimal, y para la xor con código 100, el resultado es 9 en decimal:
+
+En el siguiente ejemplo se guarda un número nuevo en R3, cambiandolo de 15 (1111_b) a 3 (0011_b) y asi operar R0 y R3 con la operación 010 que corresponde a la compuerta lógica AND, de forma que 1010_b & 0011_b es 0010_b (2 en decimal), para el caso de la OR se usa el código 011 con resultado 11 en decimal, y para la XOR con código 100, el resultado es 9 en decimal:
 
 https://drive.google.com/file/d/1wP7KGGtHgJl_v4MoVIINeVXXPNSVTVq-/view?usp=drivesdk
+
+
+Las siguientes operaciones son sobre un registro, por lo que el resultado en el display se muestra en binario para notarse mejor, además al seleccionar la combinación entre dos registros ejemplo R1 con R2, la operaciones se hace sobre el primero de los dos es decir R1. en el video se muestra como se guarda nuevamente el 3 en el segundo registro, es decir R1, y se invierte con la compuerta NOT:
+
+https://drive.google.com/file/d/1tFtb5gp7yYNuVHha36w33OE7SW92G7I3/view?usp=drivesdk
+
+En el último caso se hace la operación de roll donde se va girando el número sea hacia la derecha o hacia la izquierda, es decir se rotan los bits dependiendo el sentido que se escoja en el codigo del operando, en el ejemplo se guarda el número 1 en decimal en el tercer registro es decir R2 y se hace rotar hacia la derecha y hacia la izquierda:
+
+https://drive.google.com/file/d/1BDMt4kwbhTjcYy113eu4ixDpSG8C876y/view?usp=drivesdk
 
 
 ---
