@@ -92,8 +92,8 @@ Indica el registro seleccionado para escritura:
 El driver adapta la representación en los 4 dígitos físicos del display según el tipo de operación:
 
 **Modo Decimal con Signo (`ADD`, `SUB`, `AND`, `OR`, `XOR`):**
-   - **Formato:** `[DIG3: Dependiente de operacion] [DIG2: Signo] [DIG1: Decenas] [DIG0: Unidades]`
-   - **Resta:** Si el resultado de 5 bits indica valor negativo (bit 4 en `1`), el dígito izquierdo (`DIG3`) enciende el segmento de signo negativo (`-`) y la magnitud en complemento a 2 se convierte a decimal.
+   - **Formato:** `[DIG3: Apagado] [DIG2: Signo] [DIG1: Decenas] [DIG0: Unidades]`
+   - **Resta:** Si el resultado de 5 bits indica valor negativo (bit 4 en `1`), el dígito izquierdo (`DIG2`) enciende el segmento de signo negativo (`-`) y la magnitud en complemento a 2 se convierte a decimal.
    
 **Modo Binario Directo (`NOT`, `ROL`, `ROR`):**
    - **Formato:** `[DIG3: Bit 3] [DIG2: Bit 2] [DIG1: Bit 1] [DIG0: Bit 0]`
@@ -275,7 +275,7 @@ El display TM1637 consta de 4 dígitos físicos de 7 segmentos. La representaci�
 
 | Operaciones | Representación | Dígito 3 (Izq.) | Dígito 2 | Dígito 1 | Dígito 0 (Der.) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **ADD, SUB, AND, OR, XOR** | **Decimal con Signo** | Signo (`-` / Apagado) | Apagado | Decenas (0 a 3) | Unidades (0 a 9) |
+| **ADD, SUB, AND, OR, XOR** | **Decimal con Signo** | Signo (Apagado) | Signo | Decenas (0 a 3) | Unidades (0 a 9) |
 | **NOT, ROL, ROR** | **Binario Directo** | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
 
 A. **Modo Decimal con Signo:**
