@@ -448,6 +448,37 @@ Cada pulso de `next_comb` incrementa `comb_idx` en 1 y actualiza las direcciones
 
 > _[Captura de GTKWave con zoom en una trama: `tm_clk`, `tm_dio`, `state`, `cur_byte`]_
 
+#### Respuesta de las Señales ante Operaciones de la ALU
+En las formas de onda se observan 3 intervalos principales de $30\ \mu\text{s}$ donde las entradas `result[4:0]` y `op_code[2:0]` cambian para validar los distintos modos de visualización:
+
+| Intervalo de Tiempo | Entradas (`result` / `op_code`) | Modo de Operación | Procesamiento de la FPGA | Lo que muestra el Display |
+| :--- | :--- | :--- | :--- | :--- |
+| **$0\ \mu\text{s}$ a $30\ \mu\text{s}$** | `result = 0F` ($15$)<br>`op_code = 000` (`ADD`) | Decimal Positivo | La LUT BCD separa el $15$ en decenas ($1$) y unidades ($5$). | `  15`<br>(Alineado a la derecha) |
+| **$30\ \mu\text{s}$ a $60\ \mu\text{s}$** | `result = 1B` ($11011_2$)<br>`op_code = 001` (`SUB`) | Decimal Negativo | Detecta `result[4] = 1` (signo negativo). Calcula la magnitud absolutaf $\vert{}-5\vert{} = 5$ y activa el segmento `-`. | `-  5`<br>(Signo `-` y dígito 5) |
+| **$60\ \mu\text{s}$ a $90\ \mu\text{s}$** | `result = 05` ($00101_2$)<br>`op_code = 110` (`ROL`) | Binario Directo | Desactiva la conversión BCD y asigna cada bit de `result[3:0]` directamente a un dígito. | `0101`<br>(Un bit en cada dígito) |
+
+#### Paso 2: Anatomía del Paquete TM1637 (Transmisión por el Bus)
+Cada paquete completo de comunicación serie síncrona transmitido por la FSM consta de 3 transacciones seguidas en las líneas `tm_clk` y `tm_dio`:
+
+1. **Paquete de Configuración de Comando:**
+   `[START] -> Envía 0x40 (8 bits + ACK) -> [STOP]`
+   Configura el chip controlador TM1637 en modo de escritura con autoincremento de dirección.
+2. **Paquete de Datos de Segmentos:**
+   `[START] -> Envía 0xC0 (Dirección Base) -> Byte DIG3 (seg3) -> Byte DIG2 (seg2) -> Byte DIG1 (seg1) -> Byte DIG0 (seg0) -> [STOP]`
+   Transfiere la matriz de bits ON/OFF para encender los segmentos de los 4 dígitos.
+3. **Paquete de Control de Pantalla:**
+   `[START] -> Envía 0x8F (8 bits + ACK) -> [STOP]`
+   Enciende la pantalla y fija el brillo al máximo nivel.
+
+> Cada bit se transmite en el flanco de subida de `tm_clk`. En el noveno pulso de reloj de cada byte, la línea `tm_dio` pasa a alta impedancia (`1'bz`) para recibir el acuse de recibo (**ACK**) del chip receptor.
+
+#### Paso 3: Mecanismo de Refresco Continuo
+Las ráfagas de pulsos se repiten periódicamente debido a:
+1. **Bucle de la FSM (`ST_WAIT`):** El módulo `tm1637_driver` opera en un ciclo continuo que transmite la trama, aguarda en el estado `ST_WAIT` y vuelve a transmitir automáticamente.
+2. **Aceleración en Simulación:** En la FPGA real, la espera entre refrescos es de $\sim 0.1\text{ s}$. En el testbench se ajusta a `.REFRESH_TICKS(50)` para observar las ráfagas en escala de microsegundos ($\mu\text{s}$) sin ralentizar el simulador.
+
+*Justificación técnica:* Este refresco periódico garantiza inmunidad a fallos en el hardware real. Si ocurre ruido eléctrico en los cables Pmod, la FPGA corrige el estado de los LEDs en la siguiente ráfaga sin requerir intervención del usuario.
+
 ### 7.5 Sistema completo
 
 | Prueba | Qué se hizo | Resultado |
