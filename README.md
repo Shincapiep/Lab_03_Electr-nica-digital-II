@@ -457,7 +457,7 @@ En las formas de onda se observan 3 intervalos principales de $30\ \mu\text{s}$ 
 | **$30\ \mu\text{s}$ a $60\ \mu\text{s}$** | `result = 1B` ($11011_2$)<br>`op_code = 001` (`SUB`) | Decimal Negativo | Detecta `result[4] = 1` (signo negativo). Calcula la magnitud absolutaf $\vert{}-5\vert{} = 5$ y activa el segmento `-`. | `-  5`<br>(Signo `-` y dígito 5) |
 | **$60\ \mu\text{s}$ a $90\ \mu\text{s}$** | `result = 05` ($00101_2$)<br>`op_code = 110` (`ROL`) | Binario Directo | Desactiva la conversión BCD y asigna cada bit de `result[3:0]` directamente a un dígito. | `0101`<br>(Un bit en cada dígito) |
 
-### B. Anatomía Detallada del Paquete y Mapeo de LEDs (Protocolo TM1637)
+#### B. Anatomía Detallada del Paquete y Mapeo de LEDs (Protocolo TM1637)
 
 Para interpretar la transmisión serie en GTKWave y comprender cómo la FPGA controla los números del display utilizando únicamente dos cables (`tm_clk` y `tm_dio`), es necesario desglosar la información desde el LED individual hasta la estructura completa del bus serie.
 
@@ -558,20 +558,6 @@ Cada ciclo de actualización completo generado por la FSM produce 3 transaccione
 #### Confirmación por Acuse de Recibo (ACK - 9.º Pulso de Reloj)
 
 La transmisión de cada byte individual en el bus requiere 9 ciclos de `tm_clk`, y no solamente 8. Los primeros 8 ciclos corresponden a los bits de información, mientras que el noveno se utiliza para la confirmación de recepción (ACK).
-
-**Representación temporal de la transmisión:**
-
-```text
-Clock:   1   2   3   4   5   6   7   8     9 (ACK)
-        +---+---+---+---+---+---+---+---+ +---+
-CLK:  --+   +---+   +---+   +---+   +---+-+   +---
-
-       <------ Bits 0 a 7 (LSB -> MSB) ------>
-
-DIO:   X===X===X===X===X===X===X===X===X   0   X
-                                            |
-                                    TM1637 fuerza 0 V
-```
 
 **Pulsos 1 al 8:** La FPGA mantiene el control de la línea `tm_dio` y transmite los 8 bits de datos secuencialmente, comenzando por el bit menos significativo (LSB).
 
