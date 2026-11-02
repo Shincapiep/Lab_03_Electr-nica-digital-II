@@ -275,7 +275,7 @@ El display TM1637 consta de 4 dígitos físicos de 7 segmentos. La representaci�
 
 | Operaciones | Representación | Dígito 3 (Izq.) | Dígito 2 | Dígito 1 | Dígito 0 (Der.) |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **ADD, SUB, AND, OR, XOR** | **Decimal con Signo** | Signo (Apagado) | Signo | Decenas (0 a 3) | Unidades (0 a 9) |
+| **ADD, SUB, AND, OR, XOR** | **Decimal con Signo** |(Apagado) | Signo | Decenas (0 a 3) | Unidades (0 a 9) |
 | **NOT, ROL, ROR** | **Binario Directo** | Bit 3 | Bit 2 | Bit 1 | Bit 0 |
 
 A. **Modo Decimal con Signo:**
