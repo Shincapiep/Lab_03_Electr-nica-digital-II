@@ -606,7 +606,7 @@ Todas las pulsaciones simuladas en tb_top.v incluyen 3 rebotes al presionar y 3 
 ---
 
 ## 8. Implementación y verificación en FPGA
-Primeramente se guardaron números en los 4 registros como se muestra a continuación, en el registro cero R0, se guardo el número 10, en R1 el número 5, en R2 y R3 el número 15:
+Para iniciar se guardaron números en los 4 registros como se muestra a continuación, en el registro cero R0, se guardo el número 10, en R1 el número 5, en R2 y R3 el número 15:
 
 https://drive.google.com/file/d/1w1gWungf7QiFWou6aUTFeEyB9vM8v2qn/view?usp=drivesdk
 
